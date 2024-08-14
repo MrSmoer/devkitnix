@@ -24,10 +24,10 @@
     };
     imagePPC = pkgs.dockerTools.pullImage {
       imageName = "devkitpro/devkitppc";
-      imageDigest = "sha256:d88e21c1a7b5f8070ba7a15aa892e395f118ded9803b0f8223a3d29ba279fff3";
-      sha256 = "nVtz/9mbYveKbvTMj/39EzND7qiLkjBHfqSOgT6SBUY=";
+      imageDigest = "sha256:f1eb50b55ac6fc14900a30660b691cdc8e68168302e41370d136d9824913853e";
+      sha256 = "Cmd9opj92/yJGJ40rpq3jAmx78wWeL6KAdZcrpJKuKI=";
       finalImageName = "devkitpro/devkitppc";
-      finalImageTag = "20220821";
+      finalImageTag = "20240702";
     };
     extractDocker = image:
       pkgs.vmTools.runInLinuxVM (

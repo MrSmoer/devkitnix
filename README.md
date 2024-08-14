@@ -2,6 +2,9 @@
 
 Collection of devkitPro packages for Nix using flakes.
 
+DevkitARM works but devkitA64 and devkitPPC doesn't idk
+Maybe make this environment variable thingy
+
 ```
 $ nix flake show github:knarkzel/devkitnix
 └───packages
