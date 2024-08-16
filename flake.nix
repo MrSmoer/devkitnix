@@ -122,7 +122,7 @@
       nativeBuildInputs = [pkgs.autoPatchelfHook];
       buildInputs = [
         pkgs.stdenv.cc.cc
-        pkgs.ncurses5
+        pkgs.ncurses6
         pkgs.expat
         pkgs.xz
       ];
