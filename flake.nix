@@ -10,10 +10,10 @@
     pkgs = import nixpkgs {system = "x86_64-linux";};
     imageA64 = pkgs.dockerTools.pullImage {
       imageName = "devkitpro/devkita64";
-      imageDigest = "sha256:70db4c954eea43be5f1bc64c8882154126c99f47927ecb1e6b27fa18004fc961";
-      sha256 = "a05LU5jF5KxQdqWJv+4b3EBRlVCZjBGx69WpFL57wP4=";
+      imageDigest = "sha256:594b651733c71c0400fef22c513ebbe6a2cbec830286f10f06b3b1b39c74a806";
+      sha256 = "9wCDYDprNWAiYq3TKzAef3oac8FXpjlyMlB5VS086Gg=";
       finalImageName = "devkitpro/devkita64";
-      finalImageTag = "20221113";
+      finalImageTag = "20240604";
     };
     imageARM = pkgs.dockerTools.pullImage {
       imageName = "devkitpro/devkitarm";
