@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
   };
 
   outputs = {
@@ -32,7 +32,7 @@
     extractDocker = image:
       pkgs.vmTools.runInLinuxVM (
         pkgs.runCommand "docker-preload-image" {
-          memSize = 10 * 1024;
+          memSize = 20 * 1024;
           buildInputs = [
             pkgs.curl
             pkgs.kmod
@@ -110,7 +110,7 @@
         mkdir -p $out
         cp -r $src/{devkitARM,libgba,libnds,libctru,libmirko,liborcus,portlibs,tools} $out
         rm -rf $out/pacman
-        mkdir -p $out/nix-support
+        mkdir $out/nix-support
         echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
         echo "export DEVKITARM=$out/devkitARM" >> $out/nix-support/setup-hook
       '';
@@ -131,7 +131,7 @@
         mkdir -p $out
         cp -r $src/{devkitPPC,libogc,portlibs,tools,wut} $out
         rm -rf $out/pacman
-
+        mkdir $out/nix-support
         echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
         echo "export DEVKITPPC=$out/devkitPPC" >> $out/nix-support/setup-hook
       '';
