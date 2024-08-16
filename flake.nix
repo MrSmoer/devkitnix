@@ -1,13 +1,17 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = {
     self,
     nixpkgs,
-  }: let
-    pkgs = import nixpkgs {system = "x86_64-linux";};
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem(system: 
+    let
+    pkgs = import nixpkgs {inherit system;};
     imageA64 = pkgs.dockerTools.pullImage {
       imageName = "devkitpro/devkita64";
       imageDigest = "sha256:594b651733c71c0400fef22c513ebbe6a2cbec830286f10f06b3b1b39c74a806";
@@ -74,7 +78,7 @@
         ''
       );
   in {
-    packages.x86_64-linux.devkitA64 = pkgs.stdenv.mkDerivation {
+    packages.devkitA64 = pkgs.stdenv.mkDerivation {
       name = "devkitA64";
       src = extractDocker imageA64;
       nativeBuildInputs = [
@@ -96,7 +100,7 @@
       '';
     };
 
-    packages.x86_64-linux.devkitARM = pkgs.stdenv.mkDerivation {
+    packages.devkitARM = pkgs.stdenv.mkDerivation {
       name = "devkitARM";
       src = extractDocker imageARM;
       nativeBuildInputs = [pkgs.autoPatchelfHook];
@@ -116,7 +120,7 @@
       '';
     };
 
-    packages.x86_64-linux.devkitPPC = pkgs.stdenv.mkDerivation {
+    packages.devkitPPC = pkgs.stdenv.mkDerivation {
       name = "devkitPPC";
       src = extractDocker imagePPC;
       nativeBuildInputs = [pkgs.autoPatchelfHook];
@@ -136,5 +140,5 @@
         echo "export DEVKITPPC=$out/devkitPPC" >> $out/nix-support/setup-hook
       '';
     };
-  };
+  });
 }
