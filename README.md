@@ -1,18 +1,21 @@
 # devkitnix
 
-Collection of devkitPro packages for Nix using flakes.
+Collection of devkitPro packages for Nix using flakes. 
 
-DevkitARM works but devkitA64 and devkitPPC doesn't idk
-Maybe make this environment variable thingy
+# Changes from upstream
+Forked from [github:knarkzel/devkitnix](https://github.com/knarkzel/devkitnix)
+- DevkitARM works, I couldn't test devkitA64 and devkitPPC
+- Setting the DEVKITPRO and DEVKIT* environment variables automatically
+- Used flake-utils to make it work on other platforms as well
 
 ```
-$ nix flake show github:knarkzel/devkitnix
+$ nix flake show github:mrsmoer/devkitnix
 └───packages
     └───x86_64-linux
         ├───devkitA64: package 'devkitA64'
         ├───devkitARM: package 'devkitARM'
         └───devkitPPC: package 'devkitPPC'
-$ nix build github:knarkzel/devkitnix#devkitPPC
+$ nix build github:mrsmoer/devkitnix#devkitPPC
 $ ls result
 devkitPPC  libogc  portlibs  tools  wut
 ```
@@ -22,9 +25,9 @@ devkitPPC  libogc  portlibs  tools  wut
 ```nix
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
     devkitnix = {
-      url = "github:knarkzel/devkitnix";
+      url = "github:mrsmoer/devkitnix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -35,18 +38,16 @@ devkitPPC  libogc  portlibs  tools  wut
     devkitnix,
   }: let
     pkgs = import nixpkgs {system = "x86_64-linux";};
-    devkitA64 = devkitnix.packages.x86_64-linux.devkitA64;
+    devkitARM = devkitnix.packages.x86_64-linux.devkitARM;
   in {
     devShells.x86_64-linux.default = pkgs.mkShell {
       buildInputs = [
-        devkitA64
+        devkitARM
       ];
-      shellHook = ''
-        export DEVKITPRO=${devkitA64}
-      '';
     };
   };
 }
 ```
 
-For more example usage of `devkitnix`, see the [switch example](https://github.com/knarkzel/switch).
+For more example usage of `devkitnix`, see the [Devkitarm example](https://github.com/mrsmoer/Corgi3DS-filetransfer).
+Original example was [for switch](ttps://github.com/knarkzel/devkitnix)
