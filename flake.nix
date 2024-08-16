@@ -90,6 +90,9 @@
         mkdir -p $out
         cp -r $src/{devkitA64,libnx,portlibs,tools} $out
         rm -rf $out/pacman
+        mkdir $out/nix-support
+        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
+        echo "export DEVKITA64=$out/devkitA64" >> $out/nix-support/setup-hook
       '';
     };
 
@@ -107,6 +110,9 @@
         mkdir -p $out
         cp -r $src/{devkitARM,libgba,libnds,libctru,libmirko,liborcus,portlibs,tools} $out
         rm -rf $out/pacman
+        mkdir -p $out/nix-support
+        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
+        echo "export DEVKITARM=$out/devkitARM" >> $out/nix-support/setup-hook
       '';
     };
 
@@ -125,6 +131,9 @@
         mkdir -p $out
         cp -r $src/{devkitPPC,libogc,portlibs,tools,wut} $out
         rm -rf $out/pacman
+
+        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
+        echo "export DEVKITPPC=$out/devkitPPC" >> $out/nix-support/setup-hook
       '';
     };
   };
