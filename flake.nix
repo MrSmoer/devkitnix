@@ -34,53 +34,17 @@
       finalImageTag = "20240702";
     };
     extractDocker = image:
-      pkgs.vmTools.runInLinuxVM (
-        pkgs.runCommand "docker-preload-image" {
-          memSize = 20 * 1024;
-          buildInputs = [
-            pkgs.curl
-            pkgs.kmod
-            pkgs.docker
-            pkgs.e2fsprogs
-            pkgs.utillinux
-          ];
-        }
-        ''
-          modprobe overlay
+    pkgs.dockerTools.exportImage {
+      name = "dekitpro.tar";
+      fromImage = image;
+      diskSize = 20 * 1024;
 
-          # from https://github.com/tianon/cgroupfs-mount/blob/master/cgroupfs-mount
-          mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
-          cd /sys/fs/cgroup
-          for sys in $(awk '!/^#/ { if ($4 == 1) print $1 }' /proc/cgroups); do
-            mkdir -p $sys
-            if ! mountpoint -q $sys; then
-              if ! mount -n -t cgroup -o $sys cgroup $sys; then
-                rmdir $sys || true
-              fi
-            fi
-          done
-
-          dockerd -H tcp://127.0.0.1:5555 -H unix:///var/run/docker.sock &
-
-          until $(curl --output /dev/null --silent --connect-timeout 2 http://127.0.0.1:5555); do
-            printf '.'
-            sleep 1
-          done
-
-          echo load image
-          docker load -i ${image}
-
-          echo run image
-          docker run ${image.destNameTag} tar -C /opt/devkitpro -c . | tar -xv --no-same-owner -C $out || true
-
-          echo end
-          kill %1
-        ''
-      );
+    };
   in {
     packages.devkitA64 = pkgs.stdenv.mkDerivation {
       name = "devkitA64";
       src = extractDocker imageA64;
+      sourceRoot = ".";
       nativeBuildInputs = [
         pkgs.autoPatchelfHook
       ];
@@ -88,12 +52,15 @@
         pkgs.stdenv.cc.cc
         pkgs.ncurses6
         pkgs.zsnes
+        pkgs.gnutar
       ];
+      
       buildPhase = "true";
       installPhase = ''
         mkdir -p $out
-        cp -r $src/{devkitA64,libnx,portlibs,tools} $out
-        rm -rf $out/pacman
+        #cp -r $src/{devkitA64,libnx,portlibs,tools} $out
+        #rm -rf $out/pacman
+        cp $src $out
         mkdir $out/nix-support
         echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
         echo "export DEVKITA64=$out/devkitA64" >> $out/nix-support/setup-hook
@@ -102,27 +69,38 @@
 
     packages.devkitARM = pkgs.stdenv.mkDerivation {
       name = "devkitARM";
-      src = extractDocker imageARM;
       nativeBuildInputs = [pkgs.autoPatchelfHook];
       buildInputs = [
         pkgs.stdenv.cc.cc
         pkgs.ncurses6
         pkgs.zsnes
       ];
+
+      src = extractDocker imageARM;
+      sourceRoot = ".";
+      preUnpack = ''
+        tar -xvf $src --strip-components=3 ./opt/devkitpro 
+        ls > test
+      '';
       buildPhase = "true";
       installPhase = ''
+        runHook preInstall
         mkdir -p $out
-        cp -r $src/{devkitARM,libgba,libnds,libctru,libmirko,liborcus,portlibs,tools} $out
+        ls $src > $out/srclist
+        cp -r {devkitARM,libgba,libnds,libctru,libmirko,liborcus,portlibs,tools} $out
         rm -rf $out/pacman
+        cp test $out
         mkdir $out/nix-support
         echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
         echo "export DEVKITARM=$out/devkitARM" >> $out/nix-support/setup-hook
+        runHook postInstall
       '';
     };
 
     packages.devkitPPC = pkgs.stdenv.mkDerivation {
       name = "devkitPPC";
       src = extractDocker imagePPC;
+      sourceRoot = ".";
       nativeBuildInputs = [pkgs.autoPatchelfHook];
       buildInputs = [
         pkgs.stdenv.cc.cc
