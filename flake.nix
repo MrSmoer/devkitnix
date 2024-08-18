@@ -9,9 +9,9 @@
     nixpkgs,
     flake-utils,
   }:
-    flake-utils.lib.eachDefaultSystem(system: 
-    let
-    pkgs = import nixpkgs {inherit system;};
+  flake-utils.lib.eachDefaultSystem( system: 
+  let
+    pkgs = import nixpkgs { inherit system; };
     imageA64 = pkgs.dockerTools.pullImage {
       imageName = "devkitpro/devkita64";
       imageDigest = "sha256:594b651733c71c0400fef22c513ebbe6a2cbec830286f10f06b3b1b39c74a806";
@@ -33,90 +33,79 @@
       finalImageName = "devkitpro/devkitppc";
       finalImageTag = "20240702";
     };
-    extractDocker = image:
-    pkgs.dockerTools.exportImage {
-      name = "dekitpro.tar";
+
+    extractDocker = image: gigs: pkgs.dockerTools.exportImage {
+      name = toString (pkgs.lib.lists.drop 2 (pkgs.lib.strings.splitString "-" image));
+      #name = "ddd";
       fromImage = image;
-      diskSize = 20 * 1024;
-
+      diskSize = gigs * 1024;
     };
+
+    nativeBuildInputs = [pkgs.autoPatchelfHook];
+    buildInputs = [
+      pkgs.stdenv.cc.cc
+      pkgs.ncurses6
+      pkgs.zsnes
+    ];
+    preUnpack = ''
+      tar -xvf $src --strip-components=3 ./opt/devkitpro 
+    '';
+    sourceRoot = ".";
+    buildPhase = "true";
+    installPhase = ''
+      runHook preInstall
+      rm -rf $out/pacman
+      mkdir $out/nix-support
+      echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
+      runHook postInstall
+    '';
+    postInstall = ''
+      echo "export $uppername=$out/$name" >> $out/nix-support/setup-hook
+    '';
+
   in {
-    packages.devkitA64 = pkgs.stdenv.mkDerivation {
-      name = "devkitA64";
-      src = extractDocker imageA64;
-      sourceRoot = ".";
-      nativeBuildInputs = [
-        pkgs.autoPatchelfHook
-      ];
-      buildInputs = [
-        pkgs.stdenv.cc.cc
-        pkgs.ncurses6
-        pkgs.zsnes
-        pkgs.gnutar
-      ];
+    
+    packages.devkitA64 = pkgs.stdenv.mkDerivation(
+    let 
+      name = "devkitA64"; 
+      uppername = pkgs.lib.strings.toUpper name;
+    in {
+      inherit nativeBuildInputs buildInputs name uppername sourceRoot preUnpack buildPhase installPhase postInstall;
+      src = extractDocker imageA64 20;
       
-      buildPhase = "true";
-      installPhase = ''
+      preInstall = ''
         mkdir -p $out
-        #cp -r $src/{devkitA64,libnx,portlibs,tools} $out
-        #rm -rf $out/pacman
-        cp $src $out
-        mkdir $out/nix-support
-        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
-        echo "export DEVKITA64=$out/devkitA64" >> $out/nix-support/setup-hook
+        cp -r {devkitA64,libnx,portlibs,tools} $out
       '';
-    };
+    });
 
-    packages.devkitARM = pkgs.stdenv.mkDerivation {
-      name = "devkitARM";
-      nativeBuildInputs = [pkgs.autoPatchelfHook];
-      buildInputs = [
-        pkgs.stdenv.cc.cc
-        pkgs.ncurses6
-        pkgs.zsnes
-      ];
+    packages.devkitARM = pkgs.stdenv.mkDerivation (
+    let
+      name = "devkitARM"; 
+      uppername = pkgs.lib.strings.toUpper name;
+    in {
+      inherit buildInputs buildPhase installPhase name nativeBuildInputs preUnpack postInstall sourceRoot uppername;
+      src = extractDocker imageARM 10;
 
-      src = extractDocker imageARM;
-      sourceRoot = ".";
-      preUnpack = ''
-        tar -xvf $src --strip-components=3 ./opt/devkitpro 
-        ls > test
-      '';
-      buildPhase = "true";
-      installPhase = ''
-        runHook preInstall
+      preInstall = ''
         mkdir -p $out
-        ls $src > $out/srclist
         cp -r {devkitARM,libgba,libnds,libctru,libmirko,liborcus,portlibs,tools} $out
-        rm -rf $out/pacman
-        cp test $out
-        mkdir $out/nix-support
-        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
-        echo "export DEVKITARM=$out/devkitARM" >> $out/nix-support/setup-hook
-        runHook postInstall
       '';
-    };
+    });
 
-    packages.devkitPPC = pkgs.stdenv.mkDerivation {
+    packages.devkitPPC = pkgs.stdenv.mkDerivation (
+    let 
       name = "devkitPPC";
-      src = extractDocker imagePPC;
-      sourceRoot = ".";
-      nativeBuildInputs = [pkgs.autoPatchelfHook];
-      buildInputs = [
-        pkgs.stdenv.cc.cc
-        pkgs.ncurses6
-        pkgs.expat
-        pkgs.xz
-      ];
-      buildPhase = "true";
-      installPhase = ''
-        mkdir -p $out
-        cp -r $src/{devkitPPC,libogc,portlibs,tools,wut} $out
-        rm -rf $out/pacman
-        mkdir $out/nix-support
-        echo "export DEVKITPRO=$out" >> $out/nix-support/setup-hook
-        echo "export DEVKITPPC=$out/devkitPPC" >> $out/nix-support/setup-hook
-      '';
-    };
+      uppername = pkgs.lib.strings.toUpper name;
+      extendedBuildInputs = buildInputs ++ [ pkgs.expat ];
+    in {
+    inherit buildPhase installPhase name nativeBuildInputs preUnpack postInstall sourceRoot uppername;
+    src = extractDocker imagePPC 20;
+    buildInputs = extendedBuildInputs;
+    preInstall = ''
+      mkdir -p $out
+      cp -r {devkitPPC,libogc,portlibs,tools,wut} $out
+    '';
+    });
   });
 }
